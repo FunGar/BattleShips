@@ -79,5 +79,23 @@ namespace BattleShips.Models
                 tile.State = TileState.SHIP;
             }
         }
+
+        public override string ToString()
+        {
+            var toRet = "";
+            for (var i = 'A'; i < 'A' + 10; i++)
+            {
+                for (var j = 0; j < 10; j++)
+                {
+                    toRet += (Tiles[new Position
+                    {
+                        Y = i,
+                        X = j
+                    }].State == TileState.WATER ? '~' : '■');
+                }
+                toRet += "\n";
+            }
+            return toRet;
+        }
     }
 }

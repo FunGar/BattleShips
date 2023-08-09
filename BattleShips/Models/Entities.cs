@@ -12,36 +12,12 @@ namespace BattleShips.Models
         WATER, HIT, DESTROYED
     }
 
-    public interface IEntity
+    public abstract class Entity
     {
-        TrackingGrid TrackingGrid { get; set; }
-        PrimaryGrid EnemyGrid { get; set; }
-        void ArrangeShips();
-        Position Shoot();
-        void GetResponse(ResponseToShot response);
-        ResponseToShot GetShot(Position shotPosition);
-    }
+        protected readonly Dictionary<Tile, Ship> _ships = new Dictionary<Tile, Ship>();
+        protected readonly List<Position> _undiscoveredTiles = new List<Position>();
 
-    public class Bot : IEntity
-    {
-
-        private enum ShootingDirection
-        {
-            UP, LEFT, RIGHT, DOWN, NONE
-        }
-
-        private readonly Random _random = new Random();
-        private readonly List<Position> _hitPositions = new List<Position>();
-        private readonly List<Position> _undiscoveredTiles = new List<Position>();
-        private readonly Dictionary<Tile, Ship> ships = new Dictionary<Tile, Ship>();
-
-        private ShootingDirection direction = ShootingDirection.NONE;
-        private Position lastShotPosition;
-
-        public TrackingGrid TrackingGrid { get; set; } = new TrackingGrid();
-        public PrimaryGrid EnemyGrid { get; set; } = new PrimaryGrid();
-
-        public Bot()
+        protected Entity()
         {
             for (var i = 'A'; i < 'A' + 10; i++)
             {
@@ -52,8 +28,59 @@ namespace BattleShips.Models
             }
         }
 
-        public Position Shoot()
+        public TrackingGrid TrackingGrid { get; set; } = new TrackingGrid();
+        public PrimaryGrid EnemyGrid { get; set; } = new PrimaryGrid();
+        public abstract void ArrangeShips();
+        public abstract Position Shoot();
+        public abstract void GetResponse(ResponseToShot response);
+        public ResponseToShot GetShot(Position shotPosition)
         {
+            switch (TrackingGrid.Tiles[shotPosition].State)
+            {
+                case TileState.WATER:
+                    TrackingGrid.Tiles[shotPosition].State = TileState.MISSED_SHOT;
+                    break;
+                case TileState.SHIP:
+                    TrackingGrid.Tiles[shotPosition].State = TileState.DESTROYED_SHIP;
+                    if (_ships[TrackingGrid.Tiles[shotPosition]].IsDestroyed())
+                    {
+                        return ResponseToShot.DESTROYED;
+                    }
+                    else
+                    {
+                        return ResponseToShot.HIT;
+                    }
+            }
+            return ResponseToShot.WATER;
+        }
+        public bool IsDefeated()
+        {
+            return !_ships.Values.Where(s => !s.IsDestroyed()).Any();
+        }
+    }
+
+    public class Bot : Entity
+    {
+
+        private enum ShootingDirection
+        {
+            UP, LEFT, RIGHT, DOWN, NONE
+        }
+
+        private static readonly Random _random = new Random();
+
+        private readonly List<Position> _hitPositions = new List<Position>();
+
+        private ShootingDirection direction = ShootingDirection.NONE;
+        private Position lastShotPosition;
+
+        public Bot() : base() { }
+
+        public override Position Shoot()
+        {
+            Console.WriteLine("-----");
+            _hitPositions.ForEach(Console.WriteLine);
+            Console.WriteLine("-----");
             if (_hitPositions.Count == 0)
             {
                 lastShotPosition = _undiscoveredTiles[_random.Next(_undiscoveredTiles.Count)];
@@ -62,8 +89,11 @@ namespace BattleShips.Models
             else if (_hitPositions.Count == 1)
             {
                 var possibleShots = _undiscoveredTiles
-                    .Where(a => Math.Abs(a.X - _hitPositions[0].X) == 1 || Math.Abs(a.Y - _hitPositions[0].Y) == 1)
+                    .Where(a => a.ManhatanDistanceTo(_hitPositions[0]) == 1)
                     .ToList();
+                Console.WriteLine("=====");
+                possibleShots.ForEach(Console.WriteLine);
+                Console.WriteLine("=====");
                 lastShotPosition = possibleShots[_random.Next(possibleShots.Count)];
                 return lastShotPosition;
             }
@@ -72,8 +102,9 @@ namespace BattleShips.Models
                 if (direction == ShootingDirection.LEFT)
                 {
                     lastShotPosition = new Position { X = _hitPositions.Last().X - 1, Y = _hitPositions.Last().Y };
-                    if (_hitPositions.Last().X == 0 ||
-                        EnemyGrid.Tiles[lastShotPosition].State == TileState.WATER)
+                    if (lastShotPosition.X == -1 ||
+                        (EnemyGrid.Tiles[lastShotPosition].State != TileState.UNDISCOVERED &&
+                        EnemyGrid.Tiles[lastShotPosition].State != TileState.DESTROYED_SHIP))
                     {
                         direction = ShootingDirection.RIGHT;
                         return Shoot();
@@ -87,8 +118,9 @@ namespace BattleShips.Models
                 else if (direction == ShootingDirection.RIGHT)
                 {
                     lastShotPosition = new Position { X = _hitPositions.Last().X + 1, Y = _hitPositions.Last().Y };
-                    if (_hitPositions.Last().X == 9 ||
-                        EnemyGrid.Tiles[lastShotPosition].State == TileState.WATER)
+                    if (lastShotPosition.X == 10 ||
+                        (EnemyGrid.Tiles[lastShotPosition].State != TileState.UNDISCOVERED &&
+                        EnemyGrid.Tiles[lastShotPosition].State != TileState.DESTROYED_SHIP))
                     {
                         direction = ShootingDirection.LEFT;
                         return Shoot();
@@ -102,8 +134,9 @@ namespace BattleShips.Models
                 else if (direction == ShootingDirection.UP)
                 {
                     lastShotPosition = new Position { X = _hitPositions.Last().X, Y = (char)(_hitPositions.Last().Y - 1) };
-                    if (_hitPositions.Last().Y == 'A' ||
-                        EnemyGrid.Tiles[lastShotPosition].State == TileState.WATER)
+                    if (lastShotPosition.Y == 'A' - 1 ||
+                        (EnemyGrid.Tiles[lastShotPosition].State != TileState.UNDISCOVERED &&
+                        EnemyGrid.Tiles[lastShotPosition].State != TileState.DESTROYED_SHIP))
                     {
                         direction = ShootingDirection.DOWN;
                         return Shoot();
@@ -117,8 +150,9 @@ namespace BattleShips.Models
                 else
                 {
                     lastShotPosition = new Position { X = _hitPositions.Last().X, Y = (char)(_hitPositions.Last().Y + 1) };
-                    if (_hitPositions.Last().Y == 'A' + 10 ||
-                        EnemyGrid.Tiles[lastShotPosition].State == TileState.WATER)
+                    if (lastShotPosition.Y == 'K' ||
+                        (EnemyGrid.Tiles[lastShotPosition].State != TileState.UNDISCOVERED &&
+                        EnemyGrid.Tiles[lastShotPosition].State != TileState.DESTROYED_SHIP))
                     {
                         direction = ShootingDirection.UP;
                         return Shoot();
@@ -132,9 +166,9 @@ namespace BattleShips.Models
             }
         }
 
-        public void GetResponse(ResponseToShot response)
+        public override void GetResponse(ResponseToShot response)
         {
-            if(response == ResponseToShot.DESTROYED)
+            if (response == ResponseToShot.DESTROYED)
             {
                 EnemyGrid.Tiles[lastShotPosition].State = TileState.DESTROYED_SHIP;
 
@@ -151,7 +185,7 @@ namespace BattleShips.Models
                 _hitPositions.Clear();
                 direction = ShootingDirection.NONE;
             }
-            else if(response == ResponseToShot.HIT)
+            else if (response == ResponseToShot.HIT)
             {
                 _undiscoveredTiles.Remove(lastShotPosition);
                 EnemyGrid.Tiles[lastShotPosition].State = TileState.DESTROYED_SHIP;
@@ -174,28 +208,25 @@ namespace BattleShips.Models
                         direction = ShootingDirection.DOWN;
                     }
                 }
-                else
-                {
-                    _hitPositions.Add(lastShotPosition);
-                }
+                _hitPositions.Add(lastShotPosition);
             }
             else
             {
                 _undiscoveredTiles.Remove(lastShotPosition);
                 EnemyGrid.Tiles[lastShotPosition].State = TileState.MISSED_SHOT;
-                if(_hitPositions.Count > 1)
+                if (_hitPositions.Count > 1)
                 {
                     direction = 3 - direction;
                 }
             }
         }
 
-        public void ArrangeShips()
+        public override void ArrangeShips()
         {
             var ships = new List<Ship>();
-            for(var i = 1; i <= 4; i++)
+            for (var i = 1; i <= 4; i++)
             {
-                for(var j = 4; j >= i ; j--)
+                for (var j = 4; j >= i; j--)
                 {
                     ships.Add(new Ship { Size = i });
                 }
@@ -207,42 +238,35 @@ namespace BattleShips.Models
                 {
                     try
                     {
+                        var maxX = 10;
+                        var maxY = 10;
+                        var orientation = _random.Next(2) == 0 ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+
+                        if (orientation == Orientation.HORIZONTAL)
+                        {
+                            maxX = 11 - ship.Size;
+                        }
+                        else
+                        {
+                            maxY = 11 - ship.Size;
+                        }
+
+                        var pos = new Position
+                        {
+                            X = _random.Next(maxX),
+                            Y = (char)('A' + _random.Next(maxY))
+                        };
                         TrackingGrid.PlaceShip(
-                            ship, 
-                            new Position
-                            {
-                                X = _random.Next(10),
-                                Y = (char)('A' + _random.Next(10))
-                            },
-                            _random.Next(2) == 0 ? Orientation.HORIZONTAL : Orientation.VERTICAL
+                            ship,
+                            pos,
+                            orientation
                             );
                         needToPlace = false;
-                        ship.Tiles.ForEach(tile => this.ships[tile] = ship);
+                        ship.Tiles.ForEach(tile => this._ships[tile] = ship);
                     }
                     catch (ShipPlacementException) { }
                 }
             });
-        }
-
-        public ResponseToShot GetShot(Position shotPosition)
-        {
-            switch (TrackingGrid.Tiles[shotPosition].State)
-            {
-                case TileState.WATER:
-                    TrackingGrid.Tiles[shotPosition].State = TileState.MISSED_SHOT;
-                    break;
-                case TileState.SHIP:
-                    TrackingGrid.Tiles[shotPosition].State = TileState.DESTROYED_SHIP;
-                    if (ships[TrackingGrid.Tiles[shotPosition]].IsDestroyed())
-                    {
-                        return ResponseToShot.DESTROYED;
-                    }
-                    else
-                    {
-                        return ResponseToShot.HIT;
-                    }
-            }
-            return ResponseToShot.WATER;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace BattleShips.Models
         public List<Tile> Tiles { get; set; } = new List<Tile>();
         public bool IsDestroyed()
         {
-            return Tiles.Any(t => t.State == TileState.SHIP);
+            return Tiles.Where(t => t.State == TileState.DESTROYED_SHIP).Count() == Size;
         }
     }
 }

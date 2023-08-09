@@ -1,0 +1,10 @@
+C:\jan\prog_work\BattleShips\BattleShips\bin\Debug\BattleShips.exe.config
+C:\jan\prog_work\BattleShips\BattleShips\bin\Debug\BattleShips.exe
+C:\jan\prog_work\BattleShips\BattleShips\bin\Debug\BattleShips.pdb
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.AssemblyReference.cache
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.SuggestedBindingRedirects.cache
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.Properties.Resources.resources
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.GenerateResource.cache
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.CoreCompileInputs.cache
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.exe
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.pdb

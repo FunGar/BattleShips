@@ -13,7 +13,34 @@ namespace BattleShips.Models
 
         public int DistanceTo(Position other)
         {
-            return Math.Max(Math.Abs(this.X - other.X), Math.Abs(this.Y - other.Y));
+            return Math.Max(Math.Abs(X - other.X), Math.Abs(Y - other.Y));
+        }
+
+        public int ManhatanDistanceTo(Position other)
+        {
+            return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+        }
+
+        public override string ToString()
+        {
+            return Y + "" + (X + 1);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj == null) return false;
+            if (!(obj is Position)) return false;
+            return Equals((Position)obj);
+        }
+
+        private bool Equals(Position obj)
+        {
+            return Y == obj.Y && X == obj.X;
+        }
+        public override int GetHashCode()
+        {
+            return Y.GetHashCode() ^ X.GetHashCode();
         }
     }
 }
