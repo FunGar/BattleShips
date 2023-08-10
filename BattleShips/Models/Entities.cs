@@ -79,7 +79,7 @@ namespace BattleShips.Models
         public override Position Shoot()
         {
             Console.WriteLine("-----");
-            _hitPositions.ForEach(Console.WriteLine);
+            _undiscoveredTiles.ForEach(Console.WriteLine);
             Console.WriteLine("-----");
             if (_hitPositions.Count == 0)
             {
@@ -90,10 +90,7 @@ namespace BattleShips.Models
             {
                 var possibleShots = _undiscoveredTiles
                     .Where(a => a.ManhatanDistanceTo(_hitPositions[0]) == 1)
-                    .ToList();
-                Console.WriteLine("=====");
-                possibleShots.ForEach(Console.WriteLine);
-                Console.WriteLine("=====");
+                    .ToList();;
                 lastShotPosition = possibleShots[_random.Next(possibleShots.Count)];
                 return lastShotPosition;
             }
@@ -170,16 +167,20 @@ namespace BattleShips.Models
         {
             if (response == ResponseToShot.DESTROYED)
             {
+                _hitPositions.Add(lastShotPosition);
                 EnemyGrid.Tiles[lastShotPosition].State = TileState.DESTROYED_SHIP;
 
                 foreach (var hitPos in _hitPositions)
                 {
                     _undiscoveredTiles
-                        .Where(t => t.DistanceTo(hitPos) == 1 && EnemyGrid.Tiles[t].State == TileState.UNDISCOVERED)
+                        .Where(t => t.DistanceTo(hitPos) == 1)
                         .ToList()
                         .ForEach(t => EnemyGrid.Tiles[t].State = TileState.WATER);
                     _undiscoveredTiles
-                        .RemoveAll(t => t.DistanceTo(hitPos) <= 1);
+                        .RemoveAll(t => {
+                            Console.WriteLine(t.DistanceTo(hitPos) + " " + t + " " + hitPos);
+                            return t.DistanceTo(hitPos) <= 1;
+                            });
                 }
 
                 _hitPositions.Clear();

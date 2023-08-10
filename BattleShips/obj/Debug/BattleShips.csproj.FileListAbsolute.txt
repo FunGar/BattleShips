@@ -8,3 +8,4 @@ C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.GenerateRe
 C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.csproj.CoreCompileInputs.cache
 C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.exe
 C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.pdb
+C:\jan\prog_work\BattleShips\BattleShips\obj\Debug\BattleShips.BattleshipsForm.resources
