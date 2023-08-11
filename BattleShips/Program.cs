@@ -9,10 +9,10 @@ namespace BattleShips
 {
     internal static class Program
     {
-        public static double speed = 0.5;
-        public static string winMessage = null;
-        public static Entity player1 = new Bot();
-        public static Entity player2 = new Bot();
+        public static double Speed = 1;
+        public static string WinMessage = null;
+        public static Entity Player1 = new Bot();
+        public static Entity Player2 = new Bot();
 
         /// <summary>
         /// The main entry point for the application.
@@ -20,24 +20,23 @@ namespace BattleShips
         [MTAThread]
         static void Main()
         {
-            player1.ArrangeShips();
-            player2.ArrangeShips();
+            Player1.ArrangeShips();
+            Player2.ArrangeShips();
             var form = new BattleshipsForm();
             Task.Factory.StartNew(() => { Application.Run(form); });
         
 
             var whoseTurn = 1;
 
-            while (!player1.IsDefeated() && !player2.IsDefeated())
+            Task.Delay(1000).Wait();
+
+            while (!Player1.IsDefeated() && !Player2.IsDefeated())
             {
-                Console.WriteLine($"Player {whoseTurn} turn");
                 if (whoseTurn == 1)
                 {
-                    var pos = player1.Shoot();
-                    Console.WriteLine(pos);
-                    var responce = player2.GetShot(pos);
-                    Console.WriteLine(responce);
-                    player1.GetResponse(responce);
+                    var pos = Player1.Shoot();
+                    var responce = Player2.GetShot(pos);
+                    Player1.GetResponse(responce);
 
                     if (responce == ResponseToShot.WATER)
                     {
@@ -46,26 +45,24 @@ namespace BattleShips
                 }
                 else
                 {
-                    var pos = player2.Shoot();
-                    Console.WriteLine(pos);
-                    var responce = player1.GetShot(pos);
-                    Console.WriteLine(responce);
-                    player2.GetResponse(responce);
+                    var pos = Player2.Shoot();
+                    var responce = Player1.GetShot(pos);
+                    Player2.GetResponse(responce);
 
                     if (responce == ResponseToShot.WATER)
                     {
                         whoseTurn = 1;
                     }
                 }
-                while(speed == 0)
+                while(Speed == 0)
                 {
                     Task.Delay(100).Wait();
                 }
-                Task.Delay((int)(1000/speed)).Wait();
+                Task.Delay((int)(1000/Speed)).Wait();
             }
 
-            if (player1.IsDefeated()) winMessage = "Player 2 win!";
-            else winMessage = "Player 1 win!";
+            if (Player1.IsDefeated()) WinMessage = "Player 2 win!";
+            else WinMessage = "Player 1 win!";
 
             while (!form.IsDisposed)
             {

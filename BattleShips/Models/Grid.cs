@@ -27,6 +27,10 @@ namespace BattleShips.Models
         }
     }
 
+    /// <summary>
+    /// Enemy grid.
+    /// A grid where player can shoot.
+    /// </summary>
     public class PrimaryGrid : Grid
     {
         public PrimaryGrid()
@@ -42,9 +46,23 @@ namespace BattleShips.Models
         }
     }
 
+    /// <summary>
+    /// Players grid.
+    /// A grid where player can place ships and mark, where an enemy shoots.
+    /// </summary>
     public class TrackingGrid : Grid
     {
-        public void PlaceShip(Ship ship, Position headPosition, Orientation orientation = Orientation.HORIZONTAL)
+        /// <summary>
+        /// Places a ship on <see cref="TrackingGrid"/>.
+        /// 
+        /// </summary>
+        /// <param name="ship"> a ship that needs to be placed.</param>
+        /// <param name="headPosition"> position of ships head. Head is the highest tile for 
+        /// <c>vertical</c> orientation or the most left tile for <c>horizontal</c> orientation.</param>
+        /// <param name="orientation"> <c>vertical</c> or <c>horizontal</c>.</param>
+        /// <exception cref="ShipPlacementException">Is thrown when ship cannot be placed 
+        /// in provided position and orientation</exception>
+        public void PlaceShip(Ship ship, Position headPosition, Orientation orientation)
         {
             var tilesToChange = new List<Tile>();
             var shipPosition = new List<Position>();
@@ -53,7 +71,7 @@ namespace BattleShips.Models
                 for (var i = headPosition.X; i < headPosition.X + ship.Size; i++)
                 {
                     var pos = new Position { X = i, Y = headPosition.Y };
-                    if (Tiles.Where(t => t.Key.DistanceTo(pos) == 1)
+                    if (Tiles.Where(t => t.Key.ChebyshevDistanceTo(pos) == 1)
                         .Any(t => t.Value.State == TileState.SHIP)
                         )
                     {
@@ -68,7 +86,7 @@ namespace BattleShips.Models
                 for (var i = headPosition.Y; i < headPosition.Y + ship.Size; i++)
                 {
                     var pos = new Position { X = headPosition.X, Y = i };
-                    if (Tiles.Where(t => t.Key.DistanceTo(pos) == 1)
+                    if (Tiles.Where(t => t.Key.ChebyshevDistanceTo(pos) == 1)
                         .Any(t => t.Value.State == TileState.SHIP)
                         )
                     {
@@ -78,7 +96,7 @@ namespace BattleShips.Models
                     shipPosition.Add(pos);
                 }
             }
-            ship.Tiles = shipPosition;
+            ship.Positions = shipPosition;
             foreach (var tile in tilesToChange)
             {
                 tile.State = TileState.SHIP;
@@ -105,7 +123,7 @@ namespace BattleShips.Models
 
         public bool IsShipDestroyed(Ship ship)
         {
-            return ship.Tiles.Where(t => this.Tiles[t].State == TileState.DESTROYED_SHIP).Count() == ship.Size;
+            return ship.Positions.Where(t => this.Tiles[t].State == TileState.DESTROYED_SHIP).Count() == ship.Size;
         }
     }
 }

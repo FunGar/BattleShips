@@ -195,7 +195,7 @@ namespace BattleShips
             Environment.Exit(Environment.ExitCode);
         }
 
-        private void GameDrawer()
+        private void Repaint()
         {
             while (true)
             {
@@ -203,7 +203,7 @@ namespace BattleShips
                 {
                     for (var j = 0; j < 10; j++)
                     {
-                        var tilePlayer1 = Program.player1.TrackingGrid.Tiles[new Position { X = j, Y = (char)('A' + i) }];
+                        var tilePlayer1 = Program.Player1.TrackingGrid.Tiles[new Position { X = j, Y = (char)('A' + i) }];
                         switch (tilePlayer1.State)
                         {
                             case TileState.SHIP:
@@ -219,7 +219,7 @@ namespace BattleShips
                                 this.Player1Panels[i][j].BackColor = System.Drawing.Color.DarkCyan;
                                 break;
                         }
-                        var tilePlayer2 = Program.player2.TrackingGrid.Tiles[new Position { X = j, Y = (char)('A' + i) }];
+                        var tilePlayer2 = Program.Player2.TrackingGrid.Tiles[new Position { X = j, Y = (char)('A' + i) }];
                         switch (tilePlayer2.State)
                         {
                             case TileState.SHIP:
@@ -237,11 +237,11 @@ namespace BattleShips
                         }
                     }
                 }
-                if(!(Program.winMessage is null))
+                if(!(Program.WinMessage is null))
                 {
-                    ChangeText(Program.winMessage);
+                    ChangeText(Program.WinMessage);
                 }
-                Task.Delay(500 / (int)(Math.Max(Program.speed, 1)));
+                Task.Delay(500 / (int)(Math.Max(Program.Speed, 1)));
             }
         }
 
@@ -272,7 +272,7 @@ namespace BattleShips
                 }
             }
 
-            Task.Factory.StartNew(GameDrawer);
+            Task.Factory.StartNew(Repaint);
         }
 
         private System.Windows.Forms.Panel panel1;
@@ -281,6 +281,8 @@ namespace BattleShips
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
+        private TextBox textBox1;
+
         public List<List<System.Windows.Forms.Panel>> Player1Panels { get; set; } = new List<List<Panel>>();
         public List<List<System.Windows.Forms.Panel>> Player2Panels { get; set; } = new List<List<Panel>>();
 
@@ -333,8 +335,6 @@ namespace BattleShips
             }
             catch (Exception) { }
         }
-
-        private TextBox textBox1;
     }
 }
 

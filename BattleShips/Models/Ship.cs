@@ -14,6 +14,6 @@ namespace BattleShips.Models
     public class Ship
     {
         public virtual int Size { get; set; }
-        public List<Position> Tiles { get; set; } = new List<Position>();
+        public List<Position> Positions { get; set; } = new List<Position>();
     }
 }

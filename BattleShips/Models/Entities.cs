@@ -12,6 +12,10 @@ namespace BattleShips.Models
         WATER, HIT, DESTROYED
     }
 
+    /// <summary>
+    /// Entity that can play the game.
+    /// Currently there is only <see cref="Bot"/>, but this can change thanks to <c>Entity</c> class.
+    /// </summary>
     public abstract class Entity
     {
         protected readonly Dictionary<Position, Ship> _ships = new Dictionary<Position, Ship>();
@@ -32,7 +36,23 @@ namespace BattleShips.Models
         public PrimaryGrid EnemyGrid { get; set; } = new PrimaryGrid();
         public abstract void ArrangeShips();
         public abstract Position Shoot();
+
+        /// <summary>
+        /// Is trigered to inform an <see cref="Entity"/> about last shot.
+        /// Changes <see cref="TileState"/> of <see cref="Tile"/> on <see cref="EnemyGrid"/>.
+        /// </summary>
+        /// <param name="response"></param>
         public abstract void GetResponse(ResponseToShot response);
+
+        /// <summary>
+        /// Is triggered when an enemy shoots.
+        /// </summary>
+        /// <param name="shotPosition"> a position where an enemy shot.</param>
+        /// <returns><list type="bullet">
+        /// <item><c>MISSED_SHOT</c> if an enemy shot into the water.</item>
+        /// <item><c>HIT</c> if an enemy shot into the ship.</item>
+        /// <item><c>DESTROYED_SHIP</c> if an enemy shot into the ship and destroyed it..</item>
+        /// </list></returns>
         public ResponseToShot GetShot(Position shotPosition)
         {
             switch (TrackingGrid.Tiles[shotPosition].State)
@@ -44,10 +64,10 @@ namespace BattleShips.Models
                     TrackingGrid.Tiles[shotPosition].State = TileState.DESTROYED_SHIP;
                     if (TrackingGrid.IsShipDestroyed(_ships[shotPosition]))
                     {
-                        foreach(var shipPosition in _ships[shotPosition].Tiles)
+                        foreach(var shipPosition in _ships[shotPosition].Positions)
                         {
                             TrackingGrid.Tiles
-                                .Where(t => t.Key.DistanceTo(shipPosition) == 1 && t.Value.State == TileState.WATER)
+                                .Where(t => t.Key.ChebyshevDistanceTo(shipPosition) == 1 && t.Value.State == TileState.WATER)
                                 .ToList()
                                 .ForEach(t => t.Value.State = TileState.WATER_WITH_SHIP_FRAGMENTS);
                         }
@@ -76,6 +96,10 @@ namespace BattleShips.Models
 
         private static readonly Random _random = new Random();
 
+        /// <summary>
+        /// List of last positions where enemy ship got hit.
+        /// After the ship is destroyed the list is creared.
+        /// </summary>
         private readonly List<Position> _hitPositions = new List<Position>();
 
         private ShootingDirection direction = ShootingDirection.NONE;
@@ -83,11 +107,26 @@ namespace BattleShips.Models
 
         public Bot() : base() { }
 
+        /// <summary>
+        /// Shoots the enemy grid.
+        /// Bot shoots according to the tactic:
+        /// <list type="bullet">
+        /// <item>
+        /// If <see cref="_hitPositions"/> is empty -> shoots randomly.
+        /// </item>
+        /// <item>
+        /// If <see cref="_hitPositions"/> have 1 element -> shoots randomly in adjucent undiscovered tiles.
+        /// </item>
+        /// <item>
+        /// If <see cref="_hitPositions"/> have 2 or more elements -> remembers <see cref="direction"/> and shoot in this direction.
+        /// After first miss or when gets to the end of the map -> changes 
+        /// direction to oposite and shoots next undiscovered tile in this direction.
+        /// </item>
+        /// </list>
+        /// </summary>
+        /// <returns>position where bot shoots.</returns>
         public override Position Shoot()
         {
-            Console.WriteLine("-----");
-            _undiscoveredTiles.ForEach(Console.WriteLine);
-            Console.WriteLine("-----");
             if (_hitPositions.Count == 0)
             {
                 lastShotPosition = _undiscoveredTiles[_random.Next(_undiscoveredTiles.Count)];
@@ -180,14 +219,11 @@ namespace BattleShips.Models
                 foreach (var hitPos in _hitPositions)
                 {// TODO: change trackingBoard upon destruction aroun ship
                     _undiscoveredTiles
-                        .Where(t => t.DistanceTo(hitPos) == 1 && EnemyGrid.Tiles[t].State == TileState.UNDISCOVERED)
+                        .Where(t => t.ChebyshevDistanceTo(hitPos) == 1 && EnemyGrid.Tiles[t].State == TileState.UNDISCOVERED)
                         .ToList()
                         .ForEach(t => EnemyGrid.Tiles[t].State = TileState.WATER_WITH_SHIP_FRAGMENTS);
                     _undiscoveredTiles
-                        .RemoveAll(t => {
-                            Console.WriteLine(t.DistanceTo(hitPos) + " " + t + " " + hitPos);
-                            return t.DistanceTo(hitPos) <= 1;
-                            });
+                        .RemoveAll(t =>  t.ChebyshevDistanceTo(hitPos) <= 1);
                 }
 
                 _hitPositions.Clear();
@@ -229,6 +265,9 @@ namespace BattleShips.Models
             }
         }
 
+        /// <summary>
+        /// Randomly arranges ships for a bot.
+        /// </summary>
         public override void ArrangeShips()
         {
             var shipsToArrange = new List<Ship>();
@@ -270,7 +309,7 @@ namespace BattleShips.Models
                             orientation
                             );
                         needToPlace = false;
-                        ship.Tiles.ForEach(tile => this._ships[tile] = ship);
+                        ship.Positions.ForEach(tile => this._ships[tile] = ship);
                     }
                     catch (ShipPlacementException) { }
                 }

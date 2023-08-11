@@ -11,7 +11,7 @@ namespace BattleShips.Models
         public char Y { get; set; }
         public int X { get; set; }
 
-        public int DistanceTo(Position other)
+        public int ChebyshevDistanceTo(Position other)
         {
             return Math.Max(Math.Abs(X - other.X), Math.Abs(Y - other.Y));
         }
