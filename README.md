@@ -14,9 +14,3 @@ Other rules are like in any other Batleships game.
 # Implementation notes
 1. Players are bots and they can play the game in fractions of a second, so i put a 1 second delay after each turn just to see what is happening on board.
 2. Bots are placing ships randomly, according to the rules
-3. Bots are using this tactic for shooting:
-   + Shoots randomly until it hits an enemy
-   + After the first hit, randomly shoots in 4 adjacent squares until it hits an enemy
-   + After the second hit, shoots in next square in current direction until the ship is destroyed or until it misses or next square is border
-   + If misses or hits the border it will change direction to the opposite and shoot until the ship is destroyed
-   + After it destroys a ship in any of those steps it will mark all adjacent squares as water and return to step 1
