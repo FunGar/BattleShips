@@ -8,7 +8,7 @@ namespace BattleShips.Models
 {
     public enum TileState
     {
-        WATER, SHIP, UNDISCOVERED, DESTROYED_SHIP, MISSED_SHOT//TODO: new state
+        WATER, SHIP, UNDISCOVERED, DESTROYED_SHIP, MISSED_SHOT, WATER_WITH_SHIP_FRAGMENTS
     }
 
     public class Tile

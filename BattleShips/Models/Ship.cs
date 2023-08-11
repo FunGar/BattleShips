@@ -14,10 +14,6 @@ namespace BattleShips.Models
     public class Ship
     {
         public virtual int Size { get; set; }
-        public List<Tile> Tiles { get; set; } = new List<Tile>();
-        public bool IsDestroyed()
-        {
-            return Tiles.Where(t => t.State == TileState.DESTROYED_SHIP).Count() == Size;
-        }
+        public List<Position> Tiles { get; set; } = new List<Position>();
     }
 }

@@ -9,7 +9,7 @@ namespace BattleShips
 {
     internal static class Program
     {
-        public static double speed = 1;
+        public static double speed = 0.5;
         public static string winMessage = null;
         public static Entity player1 = new Bot();
         public static Entity player2 = new Bot();

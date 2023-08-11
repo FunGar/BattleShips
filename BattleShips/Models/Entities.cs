@@ -14,7 +14,7 @@ namespace BattleShips.Models
 
     public abstract class Entity
     {
-        protected readonly Dictionary<Tile, Ship> _ships = new Dictionary<Tile, Ship>();
+        protected readonly Dictionary<Position, Ship> _ships = new Dictionary<Position, Ship>();
         protected readonly List<Position> _undiscoveredTiles = new List<Position>();
 
         protected Entity()
@@ -42,8 +42,15 @@ namespace BattleShips.Models
                     break;
                 case TileState.SHIP:
                     TrackingGrid.Tiles[shotPosition].State = TileState.DESTROYED_SHIP;
-                    if (_ships[TrackingGrid.Tiles[shotPosition]].IsDestroyed())
+                    if (TrackingGrid.IsShipDestroyed(_ships[shotPosition]))
                     {
+                        foreach(var shipPosition in _ships[shotPosition].Tiles)
+                        {
+                            TrackingGrid.Tiles
+                                .Where(t => t.Key.DistanceTo(shipPosition) == 1 && t.Value.State == TileState.WATER)
+                                .ToList()
+                                .ForEach(t => t.Value.State = TileState.WATER_WITH_SHIP_FRAGMENTS);
+                        }
                         return ResponseToShot.DESTROYED;
                     }
                     else
@@ -55,7 +62,7 @@ namespace BattleShips.Models
         }
         public bool IsDefeated()
         {
-            return !_ships.Values.Where(s => !s.IsDestroyed()).Any();
+            return !_ships.Values.Where(s => !TrackingGrid.IsShipDestroyed(s)).Any();
         }
     }
 
@@ -171,11 +178,11 @@ namespace BattleShips.Models
                 EnemyGrid.Tiles[lastShotPosition].State = TileState.DESTROYED_SHIP;
 
                 foreach (var hitPos in _hitPositions)
-                {
+                {// TODO: change trackingBoard upon destruction aroun ship
                     _undiscoveredTiles
-                        .Where(t => t.DistanceTo(hitPos) == 1)
+                        .Where(t => t.DistanceTo(hitPos) == 1 && EnemyGrid.Tiles[t].State == TileState.UNDISCOVERED)
                         .ToList()
-                        .ForEach(t => EnemyGrid.Tiles[t].State = TileState.WATER);
+                        .ForEach(t => EnemyGrid.Tiles[t].State = TileState.WATER_WITH_SHIP_FRAGMENTS);
                     _undiscoveredTiles
                         .RemoveAll(t => {
                             Console.WriteLine(t.DistanceTo(hitPos) + " " + t + " " + hitPos);
@@ -224,15 +231,15 @@ namespace BattleShips.Models
 
         public override void ArrangeShips()
         {
-            var ships = new List<Ship>();
+            var shipsToArrange = new List<Ship>();
             for (var i = 1; i <= 4; i++)
             {
                 for (var j = 4; j >= i; j--)
                 {
-                    ships.Add(new Ship { Size = i });
+                    shipsToArrange.Add(new Ship { Size = i });
                 }
             }
-            ships.OrderByDescending(s => s.Size).ToList().ForEach(ship =>
+            shipsToArrange.OrderByDescending(s => s.Size).ToList().ForEach(ship =>
             {
                 bool needToPlace = true;
                 while (needToPlace)

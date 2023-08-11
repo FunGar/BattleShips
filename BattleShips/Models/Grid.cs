@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +47,7 @@ namespace BattleShips.Models
         public void PlaceShip(Ship ship, Position headPosition, Orientation orientation = Orientation.HORIZONTAL)
         {
             var tilesToChange = new List<Tile>();
+            var shipPosition = new List<Position>();
             if (orientation == Orientation.HORIZONTAL)
             {
                 for (var i = headPosition.X; i < headPosition.X + ship.Size; i++)
@@ -58,6 +60,7 @@ namespace BattleShips.Models
                         throw new ShipPlacementException();
                     }
                     tilesToChange.Add(Tiles[pos]);
+                    shipPosition.Add(pos);
                 }
             }
             else
@@ -72,11 +75,12 @@ namespace BattleShips.Models
                         throw new ShipPlacementException();
                     }
                     tilesToChange.Add(Tiles[pos]);
+                    shipPosition.Add(pos);
                 }
             }
+            ship.Tiles = shipPosition;
             foreach (var tile in tilesToChange)
             {
-                ship.Tiles.Add(tile);
                 tile.State = TileState.SHIP;
             }
         }
@@ -97,6 +101,11 @@ namespace BattleShips.Models
                 toRet += "\n";
             }
             return toRet;
+        }
+
+        public bool IsShipDestroyed(Ship ship)
+        {
+            return ship.Tiles.Where(t => this.Tiles[t].State == TileState.DESTROYED_SHIP).Count() == ship.Size;
         }
     }
 }
